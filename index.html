@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>6枚形変化筋トレゲーム</title>
+  <link rel="stylesheet" href="styles.css?v=20260618-10">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>6枚形変化筋トレゲーム</h1>
+      <p>受け入れ牌、変化牌、変化時の打牌を選んで判定します。</p>
+    </div>
+  </header>
+
+  <main>
+    <section id="questionCard" class="question-card">
+      <div class="question-heading">
+        <div>
+          <div class="eyebrow">現在の問題</div>
+          <h2 id="handText">読み込み中...</h2>
+          <div id="shapeName" class="shape-name"></div>
+        </div>
+        <div class="question-controls">
+          <label class="inline-check">
+            <input id="reviewModeToggle" type="checkbox">
+            復習モード
+          </label>
+        </div>
+      </div>
+
+      <div id="transitionAnimation" class="transition-animation hidden"></div>
+      <div id="handTiles" class="hand-tiles" aria-label="手牌"></div>
+
+      <section class="answer-section">
+        <h3>1. 受け入れ牌</h3>
+        <div id="ukeireButtons" class="tile-button-grid"></div>
+      </section>
+
+      <section class="answer-section">
+        <h3>2. 変化牌</h3>
+        <p class="hint">受け入れとして選んだ牌は変化牌として選べません。</p>
+        <div id="changeButtons" class="tile-button-grid"></div>
+      </section>
+
+      <section class="answer-section">
+        <div class="section-heading-row">
+          <div>
+            <h3>3. 変化牌ごとの打牌</h3>
+            <p class="hint">打牌は手牌にある牌だけ選べます。各変化牌につき1個だけ選択できます。</p>
+          </div>
+          <div class="actions inline-actions">
+            <button id="judgeButton" type="button">判定</button>
+            <button id="showAnswerButton" class="secondary" type="button">答えを見る</button>
+          </div>
+        </div>
+        <div id="discardPanels" class="discard-panels"></div>
+      </section>
+      <div class="question-bottom-actions">
+        <button id="previousButton" class="secondary" type="button">前の問題</button>
+        <button id="nextButton" class="secondary" type="button">次の問題</button>
+      </div>
+    </section>
+
+    <div id="discardModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="discardModalTitle">
+      <div class="modal-backdrop" id="discardModalBackdrop"></div>
+      <section class="modal-card">
+        <div class="modal-header">
+          <div>
+            <h3 id="discardModalTitle">打牌を選択</h3>
+            <p id="discardModalLead" class="hint"></p>
+          </div>
+          <button id="discardModalClose" class="secondary" type="button">閉じる</button>
+        </div>
+        <div id="discardModalDrawTile" class="discard-modal-draw"></div>
+        <div id="discardModalButtons" class="tile-button-grid"></div>
+        <div class="modal-actions">
+          <button id="discardModalClear" class="secondary" type="button">この変化牌を解除</button>
+        </div>
+      </section>
+    </div>
+
+    <div id="resultModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="resultModalTitle">
+      <div class="modal-backdrop" id="resultModalBackdrop"></div>
+      <section class="modal-card result-modal-card">
+        <div class="modal-header">
+          <h3 id="resultModalTitle">判定結果</h3>
+          <button id="resultModalClose" class="secondary" type="button">閉じる</button>
+        </div>
+        <div id="resultModalBody"></div>
+        <div class="modal-actions">
+          <button id="resultNextButton" type="button">次の問題</button>
+        </div>
+      </section>
+    </div>
+
+    <section id="resultPanel" class="result-panel hidden" aria-live="polite"></section>
+
+    <section class="problem-selector-panel">
+      <h2>問題を指定</h2>
+      <div class="problem-selector-controls">
+        <input id="specifiedShapeInput" type="text" inputmode="numeric" placeholder="例: 334568" maxlength="7">
+        <button id="specifiedShapeButton" type="button">この問題に切り替える</button>
+      </div>
+      <label class="inline-check problem-filter-check">
+        <input id="includeUnnecessaryTileToggle" type="checkbox">
+        不要牌がある場合を含む
+      </label>
+      <p id="specifiedShapeMessage" class="hint" aria-live="polite"></p>
+    </section>
+
+    <section class="stats-panel" aria-label="成績">
+      <h2>成績</h2>
+      <div class="stats-controls">
+        <label>
+          良形出現率倍率
+          <input id="namedShapeWeightMultiplier" type="number" min="1" max="20" step="0.5" value="10">
+        </label>
+      </div>
+      <dl id="statsSummary">
+        <dt>総出題数</dt><dd>0</dd>
+        <dt>完全正解数</dt><dd>0</dd>
+        <dt>正解数</dt><dd>0</dd>
+        <dt>完全正答率</dt><dd>0%</dd>
+        <dt>正答率</dt><dd>0%</dd>
+        <dt>受け入れミス</dt><dd>0</dd>
+        <dt>変化ミス</dt><dd>0</dd>
+      </dl>
+      <button id="resetStatsButton" class="secondary" type="button">成績リセット</button>
+
+      <section class="stats-detail">
+        <h3>名前別成績</h3>
+        <div id="statsByName"></div>
+      </section>
+
+      <section class="stats-detail">
+        <h3>日付別正答率</h3>
+        <canvas id="dailyAccuracyChart" width="900" height="280"></canvas>
+      </section>
+    </section>
+  </main>
+
+  <template id="tileButtonTemplate">
+    <button class="tile-button" type="button">
+      <img alt="">
+      <span></span>
+    </button>
+  </template>
+
+  <script src="quiz-data.js?v=20260618-10"></script>
+  <script src="app.js?v=20260618-10"></script>
+</body>
+</html>
